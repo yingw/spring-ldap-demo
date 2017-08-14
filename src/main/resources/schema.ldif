@@ -1,0 +1,64 @@
+dn: dc=wilmar,dc=cn
+objectclass: top
+objectclass: domain
+objectclass: extensibleObject
+dc: wilmar
+
+dn: ou=groups,dc=wilmar,dc=cn
+objectclass: top
+objectclass: organizationalUnit
+ou: groups
+
+dn: cn=ROLE_USER,ou=groups,dc=wilmar,dc=cn
+objectclass: top
+objectclass: groupOfUniqueNames
+cn: ROLE_USER
+uniqueMember: cn=殷国伟,ou=WISH,c=China,dc=wilmar,dc=cn
+uniqueMember: cn=Wan Jon Yew,ou=WISH,c=China,dc=wilmar,dc=cn
+uniqueMember: cn=Some Person,ou=WISH,c=China,dc=wilmar,dc=cn
+uniqueMember: cn=Some Person3,ou=WISH,c=China,dc=wilmar,dc=cn
+
+dn: cn=ROLE_ADMIN,ou=groups,dc=wilmar,dc=cn
+objectclass: top
+objectclass: groupOfUniqueNames
+cn: ROLE_ADMIN
+uniqueMember: cn=Wan Jon Yew,ou=WISH,c=China,dc=wilmar,dc=cn
+
+dn: c=China,dc=wilmar,dc=cn
+objectclass: top
+objectclass: country
+c: China
+description: The country of China
+
+dn: ou=WISH,c=China,dc=wilmar,dc=cn
+objectclass: top
+objectclass: organizationalUnit
+ou: WISH
+description: First company in China
+
+dn: cn=殷国伟,ou=WISH,c=China,dc=wilmar,dc=cn
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+uid: yinguowei
+userPassword: password
+cn: 殷国伟
+sn: 殷国伟
+description: China, WISH, 殷国伟
+telephoneNumber: +46 555-123456
+mail: yinguowei@cn.wilmar-intl.com
+
+dn: cn=Wan Jon Yew,ou=WISH,c=China,dc=wilmar,dc=cn
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+uid: jonyew.wan
+userPassword: password
+cn: Wan Jon Yew
+sn: Wan Jon Yew
+description: China, WISH, Wan Jon Yew
+telephoneNumber: +46 555-123456
+mail: jonyew.wan@cn.wilmar-intl.com
+
