@@ -24,9 +24,11 @@
 
 ```java
 @ToString
+// 注意这个是 Entry， 不是 Entity
 @Entry(objectClasses = {"person", "top"})
 public class Person {
 
+    // BaseDN，类型是 Name
     @Id
     private Name dn;
 
@@ -36,17 +38,17 @@ public class Person {
     @Attribute(name = "mail")
     private String email;
 
+    // 这个是我们的登录名
     @Attribute(name = "sAMAccountName")
     private String sAMAccountName;
 
     @Attribute(name = "displayName")
     private String displayName;
 }
-
 ```
 
 PersonRepository
-```
+```java
 @Repository
 public interface PersonRepository extends LdapRepository<Person> {
     Optional<Person> findByEmail(String email);
@@ -58,7 +60,7 @@ public interface PersonRepository extends LdapRepository<Person> {
 
 配置项
 
-```
+```properties
 spring.ldap.embedded.base-dn=dc=wilmar,dc=cn
 ```
 
@@ -66,8 +68,7 @@ spring.ldap.embedded.base-dn=dc=wilmar,dc=cn
 
 CLR
 
-```
-
+```java
 final AtomicInteger count = new AtomicInteger();
 repository.findAll().forEach(person -> System.out.println(count.incrementAndGet() + ": " + person));
 System.out.println("一共：" + count.get());
@@ -83,47 +84,62 @@ repository.findByCn("yinguowei").ifPresent(System.out::println);
 
 配置
 
-```
+```properties
+# 请在这里输入 ldap 地址和账号，urls 格式：ldap://10.114.0.8:3268
 spring.ldap.urls=ldap://10.114.0.8:3268
 spring.ldap.base=OU=Users,OU=SHH-IT,OU=YiHaiKerryGroup,DC=wilmar,DC=cn
 spring.ldap.username=xxx
 spring.ldap.password=xxx
+
+# 自动拆分成dc=
+ldap.domain=wilmar.cn
 ```
 
 ## 开启登入
 
-```    
-@Override
-protected void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests().anyRequest().authenticated()
-            .and().formLogin()
-            .and().csrf().disable();
+```java
+@EnableWebSecurity
+@Component
+public class LdapSecurityConfig extends WebSecurityConfigurerAdapter {
+    // 和 Security 配置类似，formLogin 支持，禁用跨站验证
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests().anyRequest().authenticated()
+                .and().formLogin()
+                .and().csrf().disable();
+    }
+
+    // config auth，设置 AD 的 AuthenticationProvider
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(activeDirectoryLdapAuthenticationProvider()).userDetailsService(userDetailsService());
+    }
+
+    // 定义 AuthenticationManager
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(Arrays.asList(activeDirectoryLdapAuthenticationProvider()));
+    }
+
+    // 从配置文件读取的配置
+    @Value("${ldap.domain}")
+    private String domain;
+    @Value("${spring.ldap.urls}")
+    private String url;
+    @Value("${spring.ldap.base}")
+    private String rootDn;
+
+    // 定义 AuthenticationProvider
+    @Bean
+    public AuthenticationProvider activeDirectoryLdapAuthenticationProvider() {
+        // 注意这里要用 ActiveDirectoryLdapAuthenticationProvider，专为 AD 服务
+        ActiveDirectoryLdapAuthenticationProvider provider
+                = new ActiveDirectoryLdapAuthenticationProvider(domain, url, rootDn);
+        provider.setConvertSubErrorCodesToExceptions(true);
+        return provider;
+    }
 }
 
-@Override
-protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    auth.authenticationProvider(activeDirectoryLdapAuthenticationProvider()).userDetailsService(userDetailsService());
-}
-
-@Bean
-public AuthenticationManager authenticationManager() {
-    return new ProviderManager(Arrays.asList(activeDirectoryLdapAuthenticationProvider()));
-}
-
-@Value("${ldap.domain}")
-private String domain;
-@Value("${spring.ldap.urls}")
-private String url;
-@Value("${spring.ldap.base}")
-private String rootDn;
-
-@Bean
-public AuthenticationProvider activeDirectoryLdapAuthenticationProvider() {
-    ActiveDirectoryLdapAuthenticationProvider provider
-            = new ActiveDirectoryLdapAuthenticationProvider(domain, url, rootDn);
-    provider.setConvertSubErrorCodesToExceptions(true);
-    return provider;
-}
 ```
 好了，就这么简单
 
